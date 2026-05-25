@@ -13,6 +13,8 @@ app.use(cors());
 app.use(express.json());
 
 app.use('/api/auth',    require('./routes/auth.routes'));
+app.use('/api/offices', require('./routes/office.routes'));
+app.use('/api/admin',   require('./routes/admin.routes'));
 
 app.get('/', (req, res) => res.json({ message: 'GovQueue API running ✓' }));
 

@@ -8,27 +8,21 @@ exports.issueToken = async (req, res) => {
     const { officeId, serviceId, guestPhone } = req.body;
     const today = new Date().toISOString().split('T')[0];
 
-    // Find the live queue state for this office + service
-    let queueState = await QueueState.findOne({ officeId, serviceId });
-
-    // If no queue exists yet today, create one and open it
-    if (!queueState) {
-      queueState = await QueueState.create({
-        officeId, serviceId,
-        currentToken: 0,
-        lastToken: 0,
-        isOpen: true,
-        date: today
-      });
-    }
+    // Atomically claim the next token number — no read-then-write race
+    const queueState = await QueueState.findOneAndUpdate(
+      { officeId, serviceId },
+      {
+        $inc: { lastToken: 1 },
+        $setOnInsert: { currentToken: 0, isOpen: true, date: today }
+      },
+      { new: true, upsert: true }
+    );
 
     if (!queueState.isOpen) {
+      // roll back the increment since we're rejecting this token
+      await QueueState.updateOne({ _id: queueState._id }, { $inc: { lastToken: -1 } });
       return res.status(400).json({ message: 'Queue is closed for today' });
     }
-
-    // Give this citizen the next token number
-    queueState.lastToken += 1;
-    await queueState.save();
 
     const token = await Token.create({
       citizenId:   req.user?._id || null,   // null if guest

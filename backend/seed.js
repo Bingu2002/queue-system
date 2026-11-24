@@ -2,6 +2,7 @@ require('dotenv').config();
 const mongoose = require('mongoose');
 const Office = require('./models/Office');
 const Service = require('./models/Service');
+const User = require('./models/User');
 
 const seedData = async () => {
   try {
@@ -12,12 +13,13 @@ const seedData = async () => {
     await mongoose.connect(process.env.MONGO_URI);
     console.log('MongoDB connected for seeding...');
 
-    // Clear old data
+    // 1. Clear old data
     await Office.deleteMany({});
     await Service.deleteMany({});
-    console.log('Cleared existing offices and services.');
+    await User.deleteMany({ phone: { $in: ['0711111111', '0722222222'] } });
+    console.log('Cleared existing offices, services, and test staff accounts.');
 
-    // 1. Create Government Offices (using valid enum values: 'Divisional Secretariat', 'Grama Niladhari', 'Hospital', 'Other')
+    // 2. Create Government Offices
     const kandyDS = await Office.create({
       name: 'Divisional Secretariat - Kandy',
       district: 'Kandy',
@@ -46,7 +48,7 @@ const seedData = async () => {
       address: 'Hospital Road, Kandy',
     });
 
-    // 2. Create Services linked to their respective offices
+    // 3. Create Services linked to their respective offices
     await Service.insertMany([
       {
         officeId: kandyDS._id,
@@ -80,7 +82,32 @@ const seedData = async () => {
       },
     ]);
 
-    console.log('Offices and services seeded successfully!');
+    // 4. Create Test Officer and Admin Accounts (password hashing runs automatically via User model hook)
+    await User.create([
+      {
+        name: 'Counter Officer Kandy',
+        phone: '0711111111',
+        email: 'officer.kandy@govqueue.lk',
+        password: 'password123',
+        role: 'officer',
+        officeId: kandyDS._id,
+      },
+      {
+        name: 'System Admin Kandy',
+        phone: '0722222222',
+        email: 'admin.kandy@govqueue.lk',
+        password: 'password123',
+        role: 'admin',
+        officeId: kandyDS._id,
+      },
+    ]);
+
+    console.log('Offices, services, and staff accounts seeded successfully!');
+    console.log('-----------------------------------------');
+    console.log('Officer Login -> Phone: 0711111111 | Password: password123');
+    console.log('Admin Login   -> Phone: 0722222222 | Password: password123');
+    console.log('-----------------------------------------');
+
     process.exit(0);
   } catch (err) {
     console.error('Seeding failed:', err.message);

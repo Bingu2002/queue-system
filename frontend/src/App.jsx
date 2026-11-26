@@ -5,6 +5,7 @@ import Register from './pages/Register';
 import ProtectedRoute from './components/ProtectedRoute';
 import CitizenDashboard from './views/Citizen/CitizenDashboard';
 import OfficerDashboard from './views/Officer/OfficerDashboard';
+import AdminDashboard from './views/Admin/AdminDashboard';
 
 export default function App() {
   return (
@@ -22,6 +23,11 @@ export default function App() {
         {/* Officer Protected Routes */}
         <Route element={<ProtectedRoute allowedRoles={['officer', 'admin']} />}>
           <Route path="/officer/dashboard" element={<OfficerDashboard />} />
+        </Route>
+
+        {/* Admin Protected Routes */}
+        <Route element={<ProtectedRoute allowedRoles={['admin', 'superadmin']} />}>
+          <Route path="/admin/dashboard" element={<AdminDashboard />} />
         </Route>
 
         {/* Fallback Redirect */}

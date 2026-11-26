@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
-import { setCredentials } from '../store/authSlice';
 import API from '../api/axios';
+import { loginSuccess } from '../store/authSlice';
 
 const ROLES = [
   {
@@ -78,7 +78,7 @@ export default function Login() {
         return;
       }
 
-      dispatch(setCredentials({ user, token }));
+      dispatch(loginSuccess({ user, token }));
       navigate(activeRole.redirect);
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid credentials');
